@@ -1,8 +1,8 @@
 #include "esp32-hal-ledc.h"
 #include <Arduino.h>
 
-const int frequency = 30000;
-const int resolution = 8;
+const int frequency = 150;
+const int resolution = 16;
 
 void setup() {
   Serial.begin(9600);
@@ -15,24 +15,48 @@ void setup() {
   ledcAttachPin(27, 2);
 }
 
+uint16_t convertlog(uint8_t input) {
+  int max = 65535;
+  int mult = 8198;
+
+  int res = log2(input + 1) * mult;
+  
+  return min(res, max);
+}
+
+uint16_t convert(uint8_t input){
+  int max = 65535;
+  int mult = 4104;
+
+  int res = sqrt(input) * (float)mult / (float)max * convertlog(input);
+
+  return min(res, max);
+}
+
 void loop() {
   if (Serial2.available()) {
     String input = Serial2.readStringUntil('\n');
     if (input.substring(0, 2) == "hv") {
       uint8_t val = input.substring(2, input.length()).toInt();
-      ledcWrite(1, val);
-      
-      Serial.print("Hot Value: ");
-      Serial.print(val);
-      Serial.println();
+      ledcWrite(1, convert(val));
+
+      // Serial.print("Hot Value: ");
+      // Serial.print(val);
+      // Serial.print(", ");
+      // Serial.print(convert(val));
+      // Serial.print("/65535");
+      // Serial.println();
     }
     else if (input.substring(0, 2) == "cv") {
       uint8_t val = input.substring(2, input.length()).toInt();
-      ledcWrite(2, val);
+      ledcWrite(2, convert(val));
 
-      Serial.print("Cold Value: ");
-      Serial.print(val);
-      Serial.println();
+      // Serial.print("Cold Value: ");
+      // Serial.print(val);
+      // Serial.print(", ");
+      // Serial.print(convert(val));
+      // Serial.print("/65535");
+      // Serial.println();
     }
     else {
       Serial.print("Unknown command: ");
