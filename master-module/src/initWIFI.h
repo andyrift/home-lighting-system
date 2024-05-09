@@ -11,7 +11,6 @@ bool initWIFI(String ssid, String password)
     Serial.println("Wrong credentials length");
     return false;
   }
-  WiFi.hostname("ESP-host");
   WiFi.mode(WIFI_STA);
   WiFi.begin(ssid, password);
   if (WiFi.waitForConnectResult() != WL_CONNECTED)
