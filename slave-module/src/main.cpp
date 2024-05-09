@@ -21,12 +21,24 @@ void initWIFI();
 void initUDP();
 void initHTTPSetup();
 void processInput(String input);
+bool checkSwitch();
 
 bool setup_mode = false;
 
 bool on;
 long switch_ignore_start;
 long switch_ignore_length = 1000;
+
+int hot_target = 0;
+int cold_target = 0;
+
+int hot_value = 0;
+int cold_value = 0;
+
+uint16_t hot = 0;
+uint16_t cold = 0;
+
+int speed = 20000;
 
 void setup()
 {
@@ -57,6 +69,62 @@ void setup()
   
 }
 
+void setup_mode_loop()
+{
+  server.handleClient();
+  delay(2);
+}
+
+int getAdd(int d, int step);
+
+long last_loop = millis();
+long delta;
+
+void loop()
+{
+  if (setup_mode)
+  {
+    setup_mode_loop();
+    return;
+  }
+
+  delta = millis() - last_loop;
+  last_loop = millis();
+
+  if (checkSwitch())
+  {
+    
+  }
+
+  if (on)
+  {
+    hot_target = hot_value;
+    cold_target = cold_value;
+  }
+  else
+  {
+    hot_target = 0;
+    cold_target = 0;
+  }
+
+  int dh = hot_target - (int) hot;
+  int dc = cold_target - (int) cold;
+
+  int step = speed * delta / 1000;
+
+  if (dh != 0)
+  {
+    hot += getAdd(dh, step);
+    ledcWrite(1, hot);
+  }
+
+  if (dc != 0)
+  {
+    cold += getAdd(dc, step);
+    ledcWrite(2, cold);
+  }
+}
+
 bool checkSwitch()
 {
   bool switched = false;
@@ -72,25 +140,29 @@ bool checkSwitch()
   return switched;
 }
 
-void setup_mode_loop()
+int getAdd(int d, int step)
 {
-  server.handleClient();
-  delay(2);
-}
-
-void loop()
-{
-  if (setup_mode)
+  if (d > 0)
   {
-    setup_mode_loop();
-    return;
-  }
-  if (checkSwitch())
-  {
-    if (on)
-      Serial.println("Switch ON");
+    if (d > step)
+    {
+      return step;
+    }
     else
-      Serial.println("Switch OFF");
+    {
+      return d;
+    }
+  }
+  else
+  {
+    if (d < -step)
+    {
+      return -step;
+    }
+    else
+    {
+      return d;
+    }
   }
 }
 
@@ -144,12 +216,12 @@ void processInput(String input)
   if (input.substring(0, 2) == "hv")
   {
     uint8_t val = input.substring(2, input.length()).toInt();
-    ledcWrite(1, convert(val));
+    hot_value = convert(val);
   }
   else if (input.substring(0, 2) == "cv")
   {
     uint8_t val = input.substring(2, input.length()).toInt();
-    ledcWrite(2, convert(val));
+    cold_value = convert(val);
   }
   else if (input.substring(0, 3) == "hcv")
   {
@@ -167,8 +239,8 @@ void processInput(String input)
     {
       uint8_t val1 = nums.substring(0, sep).toInt();
       uint8_t val2 = nums.substring(sep + 1, nums.length()).toInt();
-      ledcWrite(1, convert(val1));
-      ledcWrite(2, convert(val2));
+      hot_value = convert(val1);
+      cold_value = convert(val2);
     }
   }
 }
