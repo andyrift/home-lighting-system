@@ -28,10 +28,20 @@ int cold = 0;
 ulong last_send = 0;
 ulong last_tick = 0;
 
-time_t lastsync = 0;
-time_t syncinterval = 86400;
+time_t last_sync = 0;
+time_t sync_interval = 86400;
+
+ulong last_reconnect = 0;
+ulong reconnect_interval = 10000;
 
 Preferences pref;
+
+void reconnect()
+{
+  connected = initWIFI(ssid, password);
+  connected = initUDP(udp);
+  last_reconnect = millis();
+}
 
 void setup()
 {
@@ -42,11 +52,12 @@ void setup()
   password = pref.getString("password");
   // timeloc = pref.getString("timeloc");
 
-  connected = initWIFI(ssid, password);
-  connected = initUDP(udp);
-  if (connected) {
+  reconnect();
+
+  if (connected)
+  {
     syncTime(http);
-    lastsync = time(nullptr);
+    last_sync = time(nullptr);
   }
   Serial2.begin(9600, SERIAL_8N1, 16, 17);  
 }
@@ -54,14 +65,20 @@ void setup()
 void loop()
 {
 
+  multicast();
+  if (millis() - last_reconnect >= reconnect_interval && !connected)
+  {
+    reconnect();
+  }
+
   if (millis() - last_tick >= 1000)
   {
     last_tick = millis();
 
-    if (time(nullptr) - lastsync >= syncinterval)
+    if (time(nullptr) - last_sync >= sync_interval && connected)
     {
       syncTime(http);
-      lastsync = time(nullptr);
+      last_sync = time(nullptr);
     }
     else
     {
@@ -94,6 +111,11 @@ void getValues()
   Serial2.println("hcv" + String(hot) + "," + String(cold));
 }
 
+void getWiFi()
+{
+  Serial2.println("wifi" + ssid + "+" + password);
+}
+
 void setWiFi(String input)
 {
   int sep = -1;
@@ -121,7 +143,7 @@ void setWiFi(String input)
       Serial.println(ssid);
       Serial.print("password: ");
       Serial.println(password);
-      connected = initWIFI(ssid, password);
+      reconnect();
     }
   }
 }
@@ -203,12 +225,14 @@ void processInput(String input, bool print)
 {
   if (input.substring(0, 3) == "gtl")
     getTimeLoc();
-  else if (input.substring(0, 2) == "tl")
-    setTimeLoc(input.substring(2, input.length()));
   else if (input.substring(0, 2) == "gv")
     getValues();
+  else if (input.substring(0, 5) == "gwifi")
+    getWiFi();
   else if (input.substring(0, 4) == "wifi")
     setWiFi(input.substring(4, input.length()));
+  else if (input.substring(0, 2) == "tl")
+    setTimeLoc(input.substring(2, input.length()));
   else if (input.substring(0, 2) == "hv")
     setHotValue(input.substring(2, input.length()), true);
   else if (input.substring(0, 2) == "cv")
