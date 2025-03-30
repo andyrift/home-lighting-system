@@ -1,6 +1,6 @@
 # Home Lighting System
 
-Simple esp32-based home lighting system.
+Simple home lighting system based on ESP32.
 
 ## Master module
 
