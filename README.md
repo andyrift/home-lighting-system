@@ -62,4 +62,4 @@ Simple home lighting system based on ESP32.
 # License
 
 Copyright (c) 2024 Андрей Храмцов.
-Licensed under [Apache License 2.0](LICENSE).
+Licensed under the [Apache License 2.0](LICENSE).
