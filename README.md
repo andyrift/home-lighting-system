@@ -1,18 +1,17 @@
 # Home Lighting System
-Simple esp32-based lighting system for a home
+
+Simple esp32-based home lighting system.
 
 ## Master module
 
 **Components:**
 
 - ESP32 board
-
 - HC-06 bluetooth module
 
 **Features:**
 
 - Persistent configuration *(power loss does not erase configs)*
-
 - Bluetoth communication
 
   A user can:
@@ -22,9 +21,7 @@ Simple esp32-based lighting system for a home
   - Request current configuration
 
 - Connect to home WiFi *(in parallel with being paired to a smartphone with bluetooth)*
-
 - Sync time on startup and every day after that, using [http://worldtimeapi.org/]()
-
 - Multicast UDP packets with commands
 
 ## Slave module
@@ -32,14 +29,11 @@ Simple esp32-based lighting system for a home
 **Components:**
 
 - ESP32 board
-
 - Lighting control circuit *(custom)*
-
 - Light switch
-
 - Mode switch
 
-**Features**
+**Features:**
 
 - Persistent configuration
 
@@ -64,3 +58,8 @@ Simple esp32-based lighting system for a home
 ## Pictures
 
 [Pictures markdown](/pictures.md)
+
+# License
+
+Copyright (c) 2024 Андрей Храмцов.
+Licensed under [Apache License 2.0](LICENSE).
